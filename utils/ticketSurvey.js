@@ -9,7 +9,7 @@ const formatEmbedData = require('../utils/formatEmbed')
 
 // Mapa para almacenar los temporizadores de las encuestas activas.
 // La clave será el ID del mensaje de la encuesta, y el valor será el ID del setTimeout.
-const activeSurveys = require('../utils/Maps/surveyMap');
+const activeSurveys = require('../utils/Maps/surveyMap')
 
 /**
  * Envía una encuesta de satisfacción al propietario de un ticket.
@@ -78,19 +78,28 @@ async function ticketSurvey(channel, ticketConfig, ticketData) {
         .setStyle(ButtonStyle.Secondary)
     )
 
-    // Enviar la encuesta por DM al usuario
-    const sentMessage = await ticketOwner
-      .send({
+    let sentMessage
+
+    // Enviar la encuesta según el canal de configuración
+    if (ticketConfig.survey.channel === 'DM') {
+      sentMessage = await ticketOwner
+        .send({
+          embeds: [surveyEmbed],
+          components: [row]
+        })
+        .catch((dmErr) => {
+          console.error(
+            `No se pudo enviar la encuesta por DM a ${ticketOwner.username} (${ticketOwner.id}):`,
+            dmErr
+          )
+        })
+    } else if (ticketConfig.survey.channel === 'Ticket') {
+      sentMessage = await channel.send({
+        content: `<@${ticketOwner.id}>,`,
         embeds: [surveyEmbed],
         components: [row]
       })
-      .catch((dmErr) => {
-        console.error(
-          `No se pudo enviar la encuesta por DM a ${ticketOwner.username} (${ticketOwner.id}):`,
-          dmErr
-        )
-        // Si no se puede enviar el DM, la ejecución termina aquí
-      })
+    }
 
     // Si el mensaje se envió correctamente y la expiración está habilitada
     if (

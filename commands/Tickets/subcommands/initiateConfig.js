@@ -17,6 +17,7 @@ async function createNewConfig(interaction) {
     loggable: { enabled: false, channel: null },
     survey: {
       enabled: false,
+      announceChannel: null,
       channel: null,
       expires: {
         enabled: false,
@@ -25,11 +26,9 @@ async function createNewConfig(interaction) {
     },
     openingChannel: { name: 'ticket-{user}', parent: null },
     openingReason: {
-      message: { enabled: false },
-      attachment: { enabled: false, skippeable: false },
-      timeout: { reminder: null, close: null }
+      enabled: false
     },
-    idle: { close: null },
+    idle: { reminder: null, close: null },
     embeds: {
       panel: {},
       opening: {},

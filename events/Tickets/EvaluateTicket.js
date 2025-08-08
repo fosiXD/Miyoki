@@ -10,6 +10,7 @@ const TicketConfig = require('../../db/schemas/Tickets/TicketConfig')
 const StaffTicketsStats = require('../../db/schemas/Staff/staffTicketStats')
 const activeSurveys = require('../../utils/Maps/surveyMap')
 const client = require('../../index')
+const closeTicket = require('../../utils/closeTicket') // Importamos la función closeTicket
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -65,7 +66,9 @@ module.exports = {
       try {
         const ticketData = await Tickets.findOneAndUpdate(
           {
-            _id: ticketID
+            _id: ticketID,
+            // Agregamos esta validación para evitar que el usuario califique el ticket más de una vez.
+            Rated: { $ne: true }
           },
           {
             Rated: true
@@ -74,8 +77,15 @@ module.exports = {
         )
 
         if (!ticketData) {
+          // Si el ticket ya está calificado, no hacemos nada más y le avisamos al usuario.
+          if (
+            interaction.message &&
+            interaction.message.components.length > 0
+          ) {
+            interaction.message.edit({ components: [] }).catch(() => {})
+          }
           return interaction.editReply({
-            content: 'No se encontró el ticket asociado a esta encuesta.'
+            content: 'Ya has calificado este ticket. ¡Gracias de nuevo!'
           })
         }
 
@@ -171,7 +181,7 @@ module.exports = {
           const user = await client.users.fetch(staffTicketData.StaffID)
           const guild = await client.guilds.fetch(ticketData.Guild)
           const channel = await guild.channels.cache.get(
-            ticketConfig.survey.channel
+            ticketConfig.survey.announceChannel
           )
 
           if (channel) {
@@ -195,6 +205,26 @@ module.exports = {
               embeds: [embed],
               components: [seeCommentButton]
             })
+          }
+        }
+
+        // ---------------------------------------------------------------------
+        // --- Lógica NUEVA: Cierre del ticket si estaba en estado pendiente ---
+        // ---------------------------------------------------------------------
+        if (ticketData.Status === 'PendingSurvey') {
+          const ticketChannel = await client.channels.fetch(
+            ticketData.ChannelID
+          )
+          if (ticketChannel) {
+            // Llamamos a closeTicket con forceClose: true para evitar el bucle.
+            await closeTicket(
+              ticketChannel,
+              interaction.user, // Usamos el usuario que calificó como el 'closer'
+              `Encuesta completada por el usuario`,
+              ticketChannel.guild,
+              null,
+              true // Forzamos el cierre del ticket
+            )
           }
         }
       } catch (err) {

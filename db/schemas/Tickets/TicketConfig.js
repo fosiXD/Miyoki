@@ -38,15 +38,7 @@ const ticketConfigSchema = new Schema({
   },
 
   openingReason: {
-    message: { enabled: { type: Boolean, default: false } },
-    attachment: {
-      enabled: { type: Boolean, default: false },
-      skippeable: { type: Boolean, default: false }
-    },
-    timeout: {
-      reminder: { type: Number, default: null },
-      close: { type: Number, default: null }
-    }
+    enabled: { type: Boolean, default: false }
   },
 
   idle: {

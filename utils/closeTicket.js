@@ -1,4 +1,10 @@
-const { EmbedBuilder, PermissionsBitField } = require('discord.js')
+const {
+  EmbedBuilder,
+  PermissionsBitField,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} = require('discord.js')
 const TicketConfig = require('../db/schemas/Tickets/TicketConfig')
 const Tickets = require('../db/schemas/Tickets/Tickets')
 const formatDynamicText = require('../utils/formatTag')
@@ -16,6 +22,7 @@ const { activeReminders, activeCloseTimers } = require('./Maps/idleMap')
  * @param {string} [reason='Desconocida'] - La razón del cierre del ticket (ej: 'Inactividad', 'Manual', 'Resuelto').
  * @param {import('discord.js').Guild} guild - El objeto de gremio (guild) donde se encuentra el ticket.
  * @param {object} [sourceInteraction=null] - (Opcional) La interacción original si el cierre fue por botón/comando.
+ * @param {boolean} [forceClose=false] - Si es true, omite la verificación de la encuesta obligatoria.
  */
 
 async function closeTicket(
@@ -23,19 +30,19 @@ async function closeTicket(
   closerUser,
   reason = 'Desconocida',
   guild,
-  sourceInteraction = null
+  sourceInteraction = null,
+  forceClose = false
 ) {
+  if (sourceInteraction) await sourceInteraction.deferReply()
   if (!channel || !closerUser || !guild) {
     console.error(
       'closeTicket: Faltan argumentos esenciales (channel, closerUser, guild).'
     )
-    if (sourceInteraction) {
-      await sourceInteraction.followUp({
-        content:
-          'Error interno al intentar cerrar el ticket: Argumentos incompletos.',
-        ephemeral: true
-      })
-    }
+    await sourceInteraction.followUp({
+      content:
+        'Error interno al intentar cerrar el ticket: Argumentos incompletos.',
+      ephemeral: true
+    })
     return
   }
 
@@ -79,25 +86,13 @@ async function closeTicket(
 
   let ticketData
   try {
-    ticketData = await Tickets.findOneAndUpdate(
-      { ChannelID: channel.id },
-      {
-        Status: 'Completed',
-        ClosedAt: Date.now(),
-        ClosedReason: reason, // Guardar la razón del cierre
-        ClosedBy: closerUser.id // Guardar quién lo cerró
-      },
-      { new: true }
-    )
+    ticketData = await Tickets.findOne({ ChannelID: channel.id })
   } catch (err) {
-    console.error(
-      'Error al actualizar el ticket en la base de datos para cerrar:',
-      err
-    )
+    console.error('Error al buscar el ticket en la base de datos:', err)
     if (sourceInteraction) {
       await sourceInteraction.reply({
         content:
-          'Ocurrió un error al actualizar los datos del ticket para cerrar. Por favor, contacta a un administrador.',
+          'Ocurrió un error al buscar los datos del ticket. Por favor, contacta a un administrador.',
         ephemeral: true
       })
     }
@@ -109,6 +104,106 @@ async function closeTicket(
       await sourceInteraction.reply({
         content:
           'No se encontró un ticket válido asociado a este canal para cerrar.',
+        ephemeral: true
+      })
+    }
+    return
+  }
+
+  // ----------------------------------------------------------------------------------
+  // --- LÓGICA NUEVA: Manejar encuestas obligatorias antes del cierre definitivo ---
+  // ----------------------------------------------------------------------------------
+  if (
+    ticketConfig.survey.enabled &&
+    ticketConfig.survey.isMandatory &&
+    !ticketData.Rated &&
+    !forceClose
+  ) {
+    // Si la encuesta es obligatoria y no ha sido calificada, no cerramos el ticket.
+    // Actualizamos el estado para indicar que se está esperando la encuesta.
+    try {
+      await Tickets.findOneAndUpdate(
+        { ChannelID: channel.id },
+        {
+          Status: 'PendingSurvey',
+          ClosedReason: reason,
+          ClosedBy: closerUser.id
+        },
+        { new: true }
+      )
+
+      const surveyMessage = await ticketSurvey(
+        channel,
+        ticketConfig,
+        ticketData
+      )
+
+      if (sourceInteraction) {
+        await sourceInteraction.followUp({
+          content: 'Cerrando ticket...',
+          ephemeral: true
+        })
+      }
+
+      const forcedCloseButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`force_close_ticket_${ticketData._id}`)
+          .setLabel('Forzar Cierre')
+          .setStyle(ButtonStyle.Danger)
+      )
+
+      const mandatoryEmbed = new EmbedBuilder()
+        .setColor('Orange')
+        .setTitle('Encuesta Obligatoria Pendiente')
+        .setDescription(
+          `Este ticket no se puede cerrar hasta que el usuario complete la encuesta. Si la encuesta no se completa, un miembro del Staff puede usar el botón de abajo para forzar el cierre.`
+        )
+        .setFooter({ text: `Ticket ID: ${ticketData._id}` })
+        .setTimestamp()
+
+      await channel.send({
+        embeds: [mandatoryEmbed],
+        components: [forcedCloseButton]
+      })
+    } catch (err) {
+      console.error(
+        'Error al gestionar la encuesta obligatoria antes del cierre:',
+        err
+      )
+      if (sourceInteraction) {
+        await sourceInteraction.followUp({
+          content:
+            'Ocurrió un error al gestionar la encuesta obligatoria. Contacta a un administrador.',
+          ephemeral: true
+        })
+      }
+    }
+    return // Salir de la función para evitar el cierre definitivo
+  }
+
+  // Si llegamos aquí, significa que la encuesta no es obligatoria, ya se completó, o es un cierre forzado.
+  // Proceder con el cierre normal.
+  try {
+    const updatedTicketData = await Tickets.findOneAndUpdate(
+      { ChannelID: channel.id },
+      {
+        Status: 'Completed',
+        ClosedAt: Date.now(),
+        ClosedReason: reason, // Guardar la razón del cierre
+        ClosedBy: closerUser.id // Guardar quién lo cerró
+      },
+      { new: true }
+    )
+    ticketData = updatedTicketData
+  } catch (err) {
+    console.error(
+      'Error al actualizar el ticket en la base de datos para cerrar:',
+      err
+    )
+    if (sourceInteraction) {
+      await sourceInteraction.reply({
+        content:
+          'Ocurrió un error al actualizar los datos del ticket para cerrar. Por favor, contacta a un administrador.',
         ephemeral: true
       })
     }
@@ -191,12 +286,6 @@ async function closeTicket(
 
   // --- Generar y Enviar Transcript (si los logs están habilitados) ---
   if (ticketConfig.loggable && ticketConfig.loggable.enabled) {
-    // Pasa los parámetros que logTicket necesita
-    // channel: el canal del ticket
-    // ticketConfig: la configuración del ticket
-    // ticketData: los datos del ticket actualizados
-    // closerUser: interaction.user (si es manual) o message.client.user (si es automático)
-    // sourceInteraction: interaction (si es manual), null (si es automático)
     await logTicket(
       channel,
       ticketConfig,
@@ -206,18 +295,19 @@ async function closeTicket(
     )
   }
 
-  // --- Iniciar proceso de valoración de ticket
-  // Pasa los parámetros que logTicket necesita
-  // channel: el canal del ticket
-  // ticketConfig: la configuración del ticket
-  // ticketData: los datos del ticket actualizados
-  if (ticketConfig.survey && ticketConfig.survey.enabled) {
+  // --- Iniciar proceso de valoración de ticket (solo si no es obligatorio y el ticket no ha sido calificado)
+  if (
+    ticketConfig.survey &&
+    ticketConfig.survey.enabled &&
+    !ticketConfig.survey.isMandatory &&
+    !ticketData.Rated
+  ) {
     await ticketSurvey(channel, ticketConfig, ticketData)
   }
 
   // --- Respuesta Final a la Interacción (mensaje de cuenta regresiva) ---
   if (sourceInteraction) {
-    await sourceInteraction.reply({
+    await sourceInteraction.followUp({
       content: 'Cerrando ticket...',
       ephemeral: true
     })

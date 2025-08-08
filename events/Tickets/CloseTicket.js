@@ -13,7 +13,8 @@ module.exports = {
         interaction.user, // 'closerUser' (el usuario que presionó el botón)
         'Completado', // 'reason' (razón para el cierre)
         interaction.guild, // 'guild'
-        interaction // 'sourceInteraction' (la interacción original del botón)
+        interaction, // 'sourceInteraction' (la interacción original del botón)
+        false // 'forceClose' (forzar cierre del ticket sin encuesta)
       )
     }
   }
