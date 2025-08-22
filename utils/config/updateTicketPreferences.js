@@ -2,7 +2,9 @@ const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
-  EmbedBuilder
+  EmbedBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } = require('discord.js')
 
 async function updateTicketPreferences(interaction, ticketConfig) {
@@ -34,7 +36,9 @@ async function updateTicketPreferences(interaction, ticketConfig) {
     {
       name: 'Motivo de Apertura requerido',
       description: `Estado actual: ${
-        ticketConfig.openingReason.enabled ? '✅ Habilitado' : '❌ Deshabilitado'
+        ticketConfig.openingReason.enabled
+          ? '✅ Habilitado'
+          : '❌ Deshabilitado'
       }`,
       value: 'toggle-openingReason',
       emoji: '📝'
@@ -73,9 +77,16 @@ async function updateTicketPreferences(interaction, ticketConfig) {
   )
   selectMenu.addOptions(options)
 
+  const backToMenuButton = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('go-back-to-menu')
+      .setLabel('Volver')
+      .setStyle(ButtonStyle.Secondary)
+  )
+
   const row = new ActionRowBuilder().addComponents(selectMenu)
 
-  await interaction.editReply({ embeds: [preferencesEmbed], components: [row] })
+  await interaction.editReply({ embeds: [preferencesEmbed], components: [row, backToMenuButton] })
 }
 
 module.exports = updateTicketPreferences
