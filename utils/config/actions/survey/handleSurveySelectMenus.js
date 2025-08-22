@@ -6,10 +6,9 @@ async function handleSurveySelectMenus(interaction, ticketConfig) {
   switch (interaction.customId) {
     case 'survey-select-channel':
       ticketConfig.survey.channel = selectedValue
-      // Si el canal es 'DM', la encuesta no puede ser obligatoria y tampoco puede expirar.
+      // Si el canal es 'DM', la encuesta no puede ser obligatoria
       if (selectedValue === 'DM') {
         ticketConfig.survey.isMandatory = false
-        ticketConfig.survey.expires.enabled = false
       }
       await ticketConfig.save()
       await editSurveys(interaction, ticketConfig)

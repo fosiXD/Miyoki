@@ -19,8 +19,7 @@ async function handleSurveyButtons(interaction, ticketConfig) {
         ticketConfig.survey.isMandatory = !ticketConfig.survey.isMandatory
         if (ticketConfig.survey.isMandatory) {
           ticketConfig.survey.expires.enabled = false
-        } else {
-          ticketConfig.survey.channel = 'DM'
+          ticketConfig.survey.expires.time = null
         }
       }
       break
@@ -29,7 +28,6 @@ async function handleSurveyButtons(interaction, ticketConfig) {
         if (!ticketConfig.survey.expires.enabled) {
           // Habilitar la expiración y mostrar el menú de configuración de tiempo
           ticketConfig.survey.expires.enabled = true
-          await ticketConfig.save()
           await editSurveyExpires(interaction, ticketConfig)
           return
         } else {

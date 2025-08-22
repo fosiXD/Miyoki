@@ -4,7 +4,7 @@ const {
   ButtonBuilder,
   ButtonStyle
 } = require('discord.js')
-const formatDuration = require('../../formatDuration')
+const formatDuration = require('../../../formatDuration')
 
 /**
  * Muestra el menú de configuración para el tiempo de expiración de encuestas.

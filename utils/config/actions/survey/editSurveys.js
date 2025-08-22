@@ -6,7 +6,7 @@ const {
   StringSelectMenuOptionBuilder,
   EmbedBuilder
 } = require('discord.js')
-const formatDuration = require('../../formatDuration')
+const formatDuration = require('../../../formatDuration')
 
 /**
  * Muestra el submenú para configurar las encuestas.

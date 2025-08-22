@@ -7,7 +7,7 @@ const {
   TextInputBuilder,
   TextInputStyle
 } = require('discord.js')
-const formatDuration = require('../../formatDuration') // Importa una función para formatear la duración
+const formatDuration = require('../../../formatDuration') // Importa una función para formatear la duración
 
 async function editIdle(interaction, ticketConfig) {
   // Aseguramos que tenemos los valores por defecto si no existen
