@@ -6,7 +6,7 @@ const {
 } = require('discord.js')
 const client = require('../../../index')
 
-async function editConfig(interaction) {
+async function mainMenu(interaction) {
   const configModules = [
     {
       name: 'Ticket Preferences', // Claimable, Reassignable, Logs, Surveys, Ticket channel options (parent and name), Opening reason options (if enabled and attachments), Idle
@@ -34,8 +34,6 @@ async function editConfig(interaction) {
     }
   ]
 
-  await interaction.deferReply({ ephemeral: true })
-
   const mainMenuEmbed = new EmbedBuilder()
     .setColor('Yellow')
     .setThumbnail(client.user.avatarURL())
@@ -57,8 +55,12 @@ async function editConfig(interaction) {
   select.addOptions(options)
 
   const row = new ActionRowBuilder().addComponents(select)
-
   await interaction.editReply({ embeds: [mainMenuEmbed], components: [row] })
 }
 
-module.exports = editConfig
+async function editConfig(interaction) {
+  await interaction.deferReply({ ephemeral: true })
+  await mainMenu(interaction)
+}
+
+module.exports = { editConfig, mainMenu }
