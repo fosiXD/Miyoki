@@ -2,17 +2,38 @@ const { Events } = require('discord.js')
 const TicketConfig = require('../../db/schemas/Tickets/TicketConfig')
 // Importa las funciones que manejarán cada submenú
 const updateTicketPreferences = require('../../utils/config/updateTicketPreferences')
+const updateTicketRoles = require('../../utils/config/updateTicketRoles')
 
-const editIdle = require('../../utils/config/actions/editIdle')
-const editSurveys = require('../../utils/config/actions/editSurveys')
 const toggleOption = require('../../utils/config/actions/toggleOption')
+const { mainMenu } = require('../../commands/Tickets/subcommands/editConfig')
 
-const handleIdleButtons = require('../../utils/config/actions/handleIdleButtons')
-const handleSurveyButtons = require('../../utils/config/actions/handleSurveyButtons')
-const handleSurveyExpireButtons = require('../../utils/config/actions/handleSurveyExpireButtons')
+/*
+ * ----------------------------------------------------------------------
+ * ---------------------------- IDLE IMPORTS ----------------------------
+ * ----------------------------------------------------------------------
+ */
+const editIdle = require('../../utils/config/actions/idle/editIdle')
+const handleIdleButtons = require('../../utils/config/actions/idle/handleIdleButtons')
 
-const handleSurveySelectMenus = require('../../utils/config/actions/handleSurveySelectMenus')
-// ... otras importaciones
+/*
+ * ----------------------------------------------------------------------
+ * --------------------------- SURVEY IMPORTS ---------------------------
+ * ----------------------------------------------------------------------
+ */
+const editSurveys = require('../../utils/config/actions/survey/editSurveys')
+const handleSurveyButtons = require('../../utils/config/actions/survey/handleSurveyButtons')
+const handleSurveyExpireButtons = require('../../utils/config/actions/survey/handleSurveyExpireButtons')
+const handleSurveySelectMenus = require('../../utils/config/actions/survey/handleSurveySelectMenus')
+
+/*
+ * ----------------------------------------------------------------------
+ * ---------------------------- ROLE IMPORTS ----------------------------
+ * ----------------------------------------------------------------------
+ */
+const editStaffRoles = require('../../utils/config/actions/roles/editStaffRoles')
+const editManagerRoles = require('../../utils/config/actions/roles/editManagerRoles')
+const handleRoleButtons = require('../../utils/config/actions/roles/handleRoleButtons')
+const handleRoleSelectMenus = require('../../utils/config/actions/roles/handleRoleSelectMenus')
 
 async function editTicketConfigEvent(interaction) {
   if (!interaction.guild) return
@@ -50,7 +71,9 @@ async function editTicketConfigEvent(interaction) {
           case 'ticket-preferences':
             await updateTicketPreferences(interaction, ticketConfig)
             break
-          // ... otros casos para el menú principal
+          case 'roles':
+            await updateTicketRoles(interaction)
+            break
         }
         break
       case 'ticket-config-preferences':
@@ -100,9 +123,31 @@ async function editTicketConfigEvent(interaction) {
             break
         }
         break
+      case 'ticket-config-roles':
+        switch (selectedValue) {
+          case 'staff-roles':
+            await editStaffRoles(interaction, ticketConfig)
+            break
+          case 'manager-roles':
+            await editManagerRoles(interaction, ticketConfig)
+            break
+        }
+        break
       case 'survey-select-channel':
       case 'survey-announce-channel-select':
         await handleSurveySelectMenus(interaction, ticketConfig)
+        break
+      case 'add-staff-role-menu':
+        await handleRoleSelectMenus(interaction, ticketConfig)
+        break
+      case 'remove-staff-role-menu':
+        await handleRoleSelectMenus(interaction, ticketConfig)
+        break
+      case 'add-manager-role-menu':
+        await handleRoleSelectMenus(interaction, ticketConfig)
+        break
+      case 'remove-manager-role-menu':
+        await handleRoleSelectMenus(interaction, ticketConfig)
         break
     }
   }
@@ -115,8 +160,7 @@ async function editTicketConfigEvent(interaction) {
       case customId.startsWith('idle-'):
       case customId.startsWith('survey-expire-'):
       case customId.startsWith('survey-'):
-      case customId === 'go-back-to-preferences':
-      case customId === 'go-back-to-surveys':
+      case customId.startsWith('go-back-to-'):
         try {
           await interaction.deferUpdate()
         } catch (error) {
@@ -128,16 +172,27 @@ async function editTicketConfigEvent(interaction) {
         }
     }
 
-    if (customId.startsWith('idle-')) {
+    if (customId === 'go-back-to-menu') {
+      await mainMenu(interaction)
+    } else if (customId.startsWith('idle-')) {
       await handleIdleButtons(interaction, ticketConfig)
     } else if (customId.startsWith('survey-expire-')) {
       await handleSurveyExpireButtons(interaction, ticketConfig)
     } else if (customId.startsWith('survey-')) {
       await handleSurveyButtons(interaction, ticketConfig)
+    } else if (
+      customId === 'add-staff-role' ||
+      customId === 'remove-staff-role' ||
+      customId === 'add-manager-role' ||
+      customId === 'remove-manager-role'
+    ) {
+      await handleRoleButtons(interaction, ticketConfig)
     } else if (customId === 'go-back-to-preferences') {
       await updateTicketPreferences(interaction, ticketConfig)
     } else if (customId === 'go-back-to-surveys') {
       await editSurveys(interaction, ticketConfig)
+    } else if (customId === 'go-back-to-roles') {
+      await updateTicketRoles(interaction)
     }
   }
 }
