@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js')
 const initiateConfig = require('./subcommands/initiateConfig')
 const startTickets = require('./subcommands/start')
-const editConfig = require('./subcommands/editConfig')
+const { editConfig } = require('./subcommands/editConfig')
 
 module.exports = {
   admin: true,
