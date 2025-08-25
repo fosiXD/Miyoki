@@ -3,6 +3,7 @@ const TicketConfig = require('../../db/schemas/Tickets/TicketConfig')
 // Importa las funciones que manejarán cada submenú
 const updateTicketPreferences = require('../../utils/config/updateTicketPreferences')
 const updateTicketRoles = require('../../utils/config/updateTicketRoles')
+const manageTicketEmbeds = require('../../utils/config/manageTicketEmbeds')
 
 const toggleOption = require('../../utils/config/actions/toggleOption')
 const { mainMenu } = require('../../commands/Tickets/subcommands/editConfig')
@@ -35,9 +36,24 @@ const editManagerRoles = require('../../utils/config/actions/roles/editManagerRo
 const handleRoleButtons = require('../../utils/config/actions/roles/handleRoleButtons')
 const handleRoleSelectMenus = require('../../utils/config/actions/roles/handleRoleSelectMenus')
 
+/*
+ * ----------------------------------------------------------------------
+ * --------------------------- EMBEDS IMPORTS ---------------------------
+ * ----------------------------------------------------------------------
+ */
+const editEmbed = require('../../utils/config/actions/embed/editEmbed')
+const handleEmbedButtons = require('../../utils/config/actions/embed/handleEmbedButtons')
+const handleEmbedModals = require('../../utils/config/actions/embed/handleEmbedModals')
+const handleEmbedSelectMenus = require('../../utils/config/actions/embed/handleEmbedSelectMenus') // IMPORTACIÓN AÑADIDA
+
 async function editTicketConfigEvent(interaction) {
   if (!interaction.guild) return
-  if (!interaction.isStringSelectMenu() && !interaction.isButton()) return
+  if (
+    !interaction.isStringSelectMenu() &&
+    !interaction.isButton() &&
+    !interaction.isModalSubmit()
+  )
+    return
 
   // Se obtiene la configuración una única vez
   const ticketConfig = await TicketConfig.findOne({
@@ -65,8 +81,10 @@ async function editTicketConfigEvent(interaction) {
       )
       return
     }
-    switch (interaction.customId) {
-      case 'ticket-config-menu':
+    switch (
+      true // Usamos 'true' para permitir evaluar condiciones en los 'case'
+    ) {
+      case interaction.customId === 'ticket-config-menu':
         switch (selectedValue) {
           case 'ticket-preferences':
             await updateTicketPreferences(interaction, ticketConfig)
@@ -74,9 +92,12 @@ async function editTicketConfigEvent(interaction) {
           case 'roles':
             await updateTicketRoles(interaction)
             break
+          case 'embeds':
+            await manageTicketEmbeds(interaction)
+            break
         }
         break
-      case 'ticket-config-preferences':
+      case interaction.customId === 'ticket-config-preferences':
         switch (selectedValue) {
           case 'toggle-claimable':
             await toggleOption(
@@ -123,7 +144,7 @@ async function editTicketConfigEvent(interaction) {
             break
         }
         break
-      case 'ticket-config-roles':
+      case interaction.customId === 'ticket-config-roles':
         switch (selectedValue) {
           case 'staff-roles':
             await editStaffRoles(interaction, ticketConfig)
@@ -133,21 +154,28 @@ async function editTicketConfigEvent(interaction) {
             break
         }
         break
-      case 'survey-select-channel':
-      case 'survey-announce-channel-select':
+      case interaction.customId === 'survey-select-channel':
+      case interaction.customId === 'survey-announce-channel-select':
         await handleSurveySelectMenus(interaction, ticketConfig)
         break
-      case 'add-staff-role-menu':
+      case interaction.customId === 'add-staff-role-menu':
         await handleRoleSelectMenus(interaction, ticketConfig)
         break
-      case 'remove-staff-role-menu':
+      case interaction.customId === 'remove-staff-role-menu':
         await handleRoleSelectMenus(interaction, ticketConfig)
         break
-      case 'add-manager-role-menu':
+      case interaction.customId === 'add-manager-role-menu':
         await handleRoleSelectMenus(interaction, ticketConfig)
         break
-      case 'remove-manager-role-menu':
+      case interaction.customId === 'remove-manager-role-menu':
         await handleRoleSelectMenus(interaction, ticketConfig)
+        break
+      case interaction.customId === 'ticket-config-embeds':
+        const embedType = selectedValue.split('-')[0]
+        await editEmbed(interaction, ticketConfig, embedType)
+        break
+      case interaction.customId.startsWith('embed-color-'): // NUEVA LÓGICA DE ENRUTAMIENTO
+        await handleEmbedSelectMenus(interaction, ticketConfig)
         break
     }
   }
@@ -159,8 +187,18 @@ async function editTicketConfigEvent(interaction) {
     switch (true) {
       case customId.startsWith('idle-'):
       case customId.startsWith('survey-expire-'):
-      case customId.startsWith('survey-'):
+      case customId.startsWith('survey-') &&
+        !customId.startsWith('survey-expire-'):
+      case customId.startsWith('add-') && customId.endsWith('-role'):
+      case customId.startsWith('remove-') && customId.endsWith('-role'):
+      case customId.startsWith('edit-color-'):
       case customId.startsWith('go-back-to-'):
+      case customId === 'toggle-claimable':
+      case customId === 'toggle-reassignable':
+      case customId === 'toggle-logs':
+      case customId === 'toggle-openingReason':
+      case customId === 'staff-roles':
+      case customId === 'manager-roles':
         try {
           await interaction.deferUpdate()
         } catch (error) {
@@ -187,13 +225,26 @@ async function editTicketConfigEvent(interaction) {
       customId === 'remove-manager-role'
     ) {
       await handleRoleButtons(interaction, ticketConfig)
+    } else if (customId.startsWith('edit-')) {
+      handleEmbedButtons(interaction, ticketConfig)
     } else if (customId === 'go-back-to-preferences') {
       await updateTicketPreferences(interaction, ticketConfig)
     } else if (customId === 'go-back-to-surveys') {
       await editSurveys(interaction, ticketConfig)
     } else if (customId === 'go-back-to-roles') {
       await updateTicketRoles(interaction)
+    } else if (customId === 'go-back-to-embed-menu') {
+      manageTicketEmbeds(interaction)
     }
+  }
+
+  if (interaction.isModalSubmit()) {
+    const customId = interaction.customId
+    // Enrutamiento de modals basado en el customId
+    if (customId.startsWith('edit-') && customId.endsWith('-modal')) {
+      await handleEmbedModals(interaction, ticketConfig)
+    }
+    return
   }
 }
 
