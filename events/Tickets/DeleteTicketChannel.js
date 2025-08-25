@@ -18,31 +18,16 @@ module.exports = {
       if (ticketData) {
         // Verificar si el ticket ya está marcado como 'Completed' o 'Closed'
         // Esto es para evitar intentar cerrar un ticket que ya ha sido procesado
-        if (
-          ticketData.Status === 'Completed'
-        ) {
-          console.log(
-            `Ticket ${channel.name} (${channel.id}) ya marcado como cerrado en la DB. No se requiere acción adicional.`
-          )
-          // Opcionalmente, puedes eliminarlo de la DB aquí si prefieres.
-          // await Tickets.deleteOne({ ChannelID: channel.id });
+        if (ticketData.Status === 'Completed') {
           return
         }
 
-        console.log(
-          `Canal de ticket ${channel.name} (${channel.id}) eliminado. Procediendo a cerrar el ticket en la DB.`
-        )
-        
         await closeTicket(
           channel,
           channel.client.user, // El bot es quien registra el cierre en este caso
           'Canal Eliminado Externamente', // Razón del cierre
           channel.guild,
           null // No hay interacción de origen, ya que el canal fue eliminado directamente
-        )
-
-        console.log(
-          `Ticket ${channel.id} cerrado exitosamente debido a la eliminación del canal.`
         )
       }
     } catch (error) {

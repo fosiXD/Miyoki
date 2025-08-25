@@ -114,9 +114,6 @@ async function ticketSurvey(channel, ticketConfig, ticketData) {
         try {
           // Obtener la instancia del mensaje y eliminarla
           await sentMessage.delete()
-          console.log(
-            `Encuesta del ticket ${ticketData._id} eliminada después de la expiración.`
-          )
         } catch (deleteError) {
           // Este error puede ocurrir si el usuario ya interactuó con el mensaje o lo borró
           console.warn(

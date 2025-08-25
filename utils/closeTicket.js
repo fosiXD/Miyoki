@@ -311,13 +311,6 @@ async function closeTicket(
       content: 'Cerrando ticket...',
       ephemeral: true
     })
-  } else {
-    // Si no hay interacción (ej. cierre automático), solo loguear
-    console.log(
-      `Ticket ${channel.name} (${channel.id}) programado para cerrarse en ${
-        closeDelayMs / 1000
-      } segundos.`
-    )
   }
 
   // --- Programar Eliminación del Canal ---
@@ -327,8 +320,6 @@ async function closeTicket(
       const currentChannel = guild.channels.cache.get(channel.id)
       if (currentChannel) {
         await currentChannel.delete()
-      } else {
-        console.log(`El canal ${channel.id} ya no existe, no se pudo eliminar.`)
       }
     } catch (err) {
       console.error('Hubo un error eliminando el canal del ticket.', err)
