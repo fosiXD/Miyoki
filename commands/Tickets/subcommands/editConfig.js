@@ -25,12 +25,6 @@ async function mainMenu(interaction) {
       description: 'Embeds used.',
       value: 'embeds',
       emoji: '✏️'
-    },
-    {
-      name: 'Buttons',
-      description: 'Buttons used.',
-      value: 'buttons',
-      emoji: '✅'
     }
   ]
 

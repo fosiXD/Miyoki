@@ -113,25 +113,19 @@ module.exports = {
     const Buttons = new ActionRowBuilder()
     try {
       if (ticketConfig.claimable.enabled) {
-        const claimButton =
-          Object.keys(ticketConfig.buttons.claim).length !== 0
-            ? new ButtonBuilder(ticketConfig.buttons.claim)
-            : new ButtonBuilder()
-                .setCustomId('claim-ticket')
-                .setLabel('Reclamar')
-                .setEmoji('🔓')
-                .setStyle(ButtonStyle.Success)
+        const claimButton = new ButtonBuilder()
+          .setCustomId('claim-ticket')
+          .setLabel('Reclamar')
+          .setEmoji('🔓')
+          .setStyle(ButtonStyle.Success)
 
         Buttons.addComponents(claimButton)
       } else {
-        const closeButton =
-          Object.keys(ticketConfig.buttons.close).length !== 0
-            ? new ButtonBuilder(ticketConfig.buttons.close)
-            : new ButtonBuilder()
-                .setCustomId('close-ticket')
-                .setLabel('Cerrar Ticket')
-                .setEmoji('🔒')
-                .setStyle(ButtonStyle.Danger)
+        const closeButton = new ButtonBuilder()
+          .setCustomId('close-ticket')
+          .setLabel('Cerrar Ticket')
+          .setEmoji('🔒')
+          .setStyle(ButtonStyle.Danger)
 
         Buttons.addComponents(closeButton)
       }

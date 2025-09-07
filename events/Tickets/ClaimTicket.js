@@ -151,26 +151,20 @@ module.exports = {
     const Buttons = new ActionRowBuilder()
 
     try {
-      const closeButton =
-        Object.keys(ticketConfig.buttons.close).length !== 0
-          ? new ButtonBuilder(ticketConfig.buttons.close)
-          : new ButtonBuilder()
-              .setCustomId('close-ticket')
-              .setLabel('Cerrar Ticket')
-              .setEmoji('🔒')
-              .setStyle(ButtonStyle.Danger)
+      const closeButton = new ButtonBuilder()
+        .setCustomId('close-ticket')
+        .setLabel('Cerrar Ticket')
+        .setEmoji('🔒')
+        .setStyle(ButtonStyle.Danger)
 
       Buttons.addComponents(closeButton)
 
       if (ticketConfig.reassignable.enabled) {
-        const reassignButton =
-          Object.keys(ticketConfig.buttons.reassign).length !== 0
-            ? new ButtonBuilder(ticketConfig.buttons.reasign)
-            : new ButtonBuilder()
-                .setCustomId('reassign-ticket')
-                .setLabel('Reasignar Ticket')
-                .setEmoji('🔓')
-                .setStyle(ButtonStyle.Primary)
+        const reassignButton = new ButtonBuilder()
+          .setCustomId('reassign-ticket')
+          .setLabel('Reasignar Ticket')
+          .setEmoji('🔓')
+          .setStyle(ButtonStyle.Primary)
 
         Buttons.addComponents(reassignButton)
       }

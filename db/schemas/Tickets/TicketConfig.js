@@ -57,16 +57,6 @@ const ticketConfigSchema = new Schema({
     },
     closing: { type: Object, default: {} },
     log: { type: Object, default: {} }
-  },
-
-  buttons: {
-    open: { type: Object, default: {} },
-    claim: { type: Object, default: {} },
-    reassign: { type: Object, default: {} },
-    close: { type: Object, default: {} },
-    reopen: { type: Object, default: {} },
-    delete: { type: Object, default: {} },
-    log: { type: Object, default: {} }
   }
 })
 
