@@ -102,11 +102,6 @@ async function handleRoleButtons(interaction, ticketConfig) {
     return
   }
 
-  // Defer Update fuera del switch para los casos de roles
-  if (customId.endsWith('-role')) {
-    await interaction.deferUpdate()
-  }
-
   let result
   switch (customId) {
     case 'add-staff-role':
