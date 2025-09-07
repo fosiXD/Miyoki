@@ -15,6 +15,7 @@ async function createNewConfig(interaction) {
     claimable: { enabled: false },
     reassignable: { enabled: false },
     loggable: { enabled: false, channel: null },
+    isMandatory: false,
     survey: {
       enabled: false,
       announceChannel: null,
@@ -36,15 +37,6 @@ async function createNewConfig(interaction) {
       reassigned: {},
       reason: { message: {}, attachment: {} },
       closing: {},
-      log: {}
-    },
-    buttons: {
-      open: {},
-      claim: {},
-      reassign: {},
-      close: {},
-      reopen: {},
-      delete: {},
       log: {}
     }
   })
