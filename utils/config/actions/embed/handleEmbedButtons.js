@@ -28,11 +28,6 @@ const fieldModalOptions = {
     label: 'Nuevo Pie de Página',
     style: TextInputStyle.Short
   },
-  url: {
-    title: 'URL',
-    label: 'Nueva URL',
-    style: TextInputStyle.Short
-  },
   image: {
     title: 'Imagen',
     label: 'Nueva URL de Imagen',
@@ -87,9 +82,8 @@ async function handleEmbedButtons(interaction, ticketConfig) {
     case 'title':
     case 'description':
     case 'footer':
-    case 'url':
     case 'image':
-    case 'thumbnail':
+    case 'thumbnail': // TODO: Trabajar con los images y thumbnail
       await showEmbedModal(interaction, embedType, field)
       break
     case 'color':
@@ -145,7 +139,7 @@ async function handleEmbedButtons(interaction, ticketConfig) {
       })
       break
     case 'fields':
-      // Lógica para gestionar campos (agregar/eliminar)
+      // TODO: Lógica para gestionar campos (agregar/eliminar)
       break
     default:
       break

@@ -1,9 +1,8 @@
 const { EmbedBuilder } = require('discord.js')
 const TicketConfig = require('../../../../db/schemas/Tickets/TicketConfig')
-const editPanelEmbed = require('./editEmbed')
+const editEmbed = require('./editEmbed')
 const formatDynamicText = require('../../../formatTag')
 const formatEmbedData = require('../../../formatEmbed')
-// TODO: Importar otras funciones de edición de embeds (ej: editOpeningEmbed)
 
 /**
  * Envía un mensaje de seguimiento con la previsualización del embed.
@@ -12,7 +11,11 @@ const formatEmbedData = require('../../../formatEmbed')
  */
 async function sendEmbedPreview(interaction, embed) {
   // Asegurarse de que el embed tenga un título o una descripción por defecto si no existen
-  const embedData = formatEmbedData(interaction, embed.toJSON(), formatDynamicText)
+  const embedData = formatEmbedData(
+    interaction,
+    embed.toJSON(),
+    formatDynamicText
+  )
 
   const previewEmbed = new EmbedBuilder(embedData)
 
@@ -78,10 +81,7 @@ async function handleEmbedModals(interaction) {
     await sendEmbedPreview(interaction, embedBuilder)
 
     // Redirigir de nuevo a la pantalla de edición de ese embed
-    if (embedType === 'panel') {
-      await editPanelEmbed(interaction, ticketConfig)
-    }
-    // TODO: Lógica para otros tipos de embed como 'opening' o 'claimed'
+    await editEmbed(interaction, ticketConfig)
   }
 }
 

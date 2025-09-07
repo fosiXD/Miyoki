@@ -1,6 +1,5 @@
 const { EmbedBuilder } = require('discord.js')
-// TODO: Importar otras funciones de edición de embeds (ej: editOpeningEmbed)
-const editPanelEmbed = require('./editEmbed')
+const editEmbed = require('./editEmbed')
 
 /**
  * Maneja las interacciones de los menús de selección de embeds.
@@ -28,8 +27,7 @@ async function handleEmbedSelectMenus(interaction, ticketConfig) {
     await ticketConfig.save()
 
     // Se edita la respuesta para mostrar el menú de edición con el nuevo color
-    // TODO: Usar una función de edición dinámica en lugar de hardcodear editPanelEmbed
-    await editPanelEmbed(interaction, ticketConfig)
+    await editEmbed(interaction, ticketConfig)
   }
 }
 
