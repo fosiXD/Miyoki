@@ -27,7 +27,7 @@ async function handleEmbedSelectMenus(interaction, ticketConfig) {
     await ticketConfig.save()
 
     // Se edita la respuesta para mostrar el menú de edición con el nuevo color
-    await editEmbed(interaction, ticketConfig)
+    await editEmbed(interaction, ticketConfig, embedType)
   }
 }
 

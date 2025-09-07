@@ -81,7 +81,7 @@ async function handleEmbedModals(interaction) {
     await sendEmbedPreview(interaction, embedBuilder)
 
     // Redirigir de nuevo a la pantalla de edición de ese embed
-    await editEmbed(interaction, ticketConfig)
+    await editEmbed(interaction, ticketConfig, embedType)
   }
 }
 
